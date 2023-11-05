@@ -122,7 +122,6 @@ void loop()
   
 if(rst_btn == 1)
     {
-      //cook_done == 1;
       analogWrite(heater, 0);
       mode_select = 0;
       cup_select = 0;
