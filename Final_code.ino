@@ -4,8 +4,8 @@
 #include <Servo.h>
 
 int seconds = 0;
-int a = 0;
-int b = 0;
+int a = 2048;
+int b = 2048;
 int pos = 0;
 int mode_select = 2048;
 int cup_select = 2048;
@@ -48,29 +48,33 @@ void clock(int selecttime)
 
     while (min < selecttime)
     {
-        if (seconds < 60)
+        if (seconds < 59)
         {
             lcd_1.clear();
             seconds += 1;
-            lcd_1.setCursor(0, 0);
+          	//lcd_1.setCursor(0, 0);
+            //lcd_1.print("Time Elapsed");
+            lcd_1.setCursor(0, 1);
             lcd_1.print(min);
-            lcd_1.setCursor(2, 0);
+            lcd_1.setCursor(2, 1);
             lcd_1.print(":");
-            lcd_1.setCursor(3, 0);
+            lcd_1.setCursor(3, 1);
             lcd_1.print(seconds);
             delay(1000);
         }
       
-        if (seconds == 60)
+        if (seconds == 59)
         {
             lcd_1.clear();
             seconds = 0;
             min += 1;
-            lcd_1.setCursor(0, 0);
+          	//lcd_1.setCursor(0, 0);
+            //lcd_1.print("Time Elapsed");
+            lcd_1.setCursor(0, 1);
             lcd_1.print(min);
-            lcd_1.setCursor(2, 0);
+            lcd_1.setCursor(2, 1);
             lcd_1.print(":");
-            lcd_1.setCursor(3, 0);
+            lcd_1.setCursor(3, 1);
             lcd_1.print(seconds);
             delay(1000);
         }
@@ -82,23 +86,14 @@ void cooking_done()
     lcd_1.clear();
     lcd_1.setCursor(0, 0);
     lcd_1.print("Cooking Done");
-  	mode_select = 0;
-    cup_select = 0;
-    a = 0;
-  	b = 0;
+  	mode_select = 2048;
+    cup_select = 2048;
+    a = 2048;
+    b = 2048;
     analogWrite(heater, 11); // heater turned on at 45 degree celcius until push btn is pressed
     drain_servo(10000);
     digitalWrite(4, HIGH); // Buzzer and Led Indication
     delay(5000);
-  	//digitalWrite(4, LOW);
-  
-  
-  	// int rst_btn = digitalRead(rst);//<----
-  	// if(rst_btn == 1)
-    //	{
-    //  		//cook_done == 1;
-    //		analogWrite(heater, 0);
-    //	}
 }
 
 void rice_select(char rice_type[], int cups_value, int time)
@@ -155,7 +150,6 @@ void setup()
 
 void loop()
 {
- 
   if(!isStoring)
   {
 char modes[14][20] = {"White Rice", "Black Rice", "Brown Rice", "Red Rice", "Quinoa Rice",
@@ -186,11 +180,11 @@ int rst_btn = digitalRead(rst);
 if(rst_btn == 1)
     {
       analogWrite(heater, 0);
+  	  isStoring = 0;
       mode_select = 2048;
       cup_select = 2048;
-  	  isStoring = 0; 
-      a = 0;
-      b = 0;
+      a = 2048;
+      b = 2048;
     }
 
   
@@ -231,22 +225,22 @@ else{
     // ---------------Cup1----------------
     if (mode_select >= 0 && mode_select <= 73 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("White Rice", 1, 3200); // name_mode, no.ofcup, time 32 min
+        rice_select("White Rice", 1, 1); // name_mode, no.ofcup, time 32 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("White Rice", 2, 3500); // time 35 min
+        rice_select("White Rice", 2, 1); // time 35 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("White Rice", 3, 3800); // time 38 min
+        rice_select("White Rice", 3, 1); // time 38 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("White Rice", 4, 4200); // time 42 min
+        rice_select("White Rice", 4, 1); // time 42 min
     }
 
     // ---------------------------------Mode2--------------------------------
