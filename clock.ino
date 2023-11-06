@@ -8,7 +8,7 @@ Adafruit_LiquidCrystal lcd_1(0);
 
 unsigned long startMillis; // some global variables available anywhere in the program
 unsigned long currentMillis;
-const unsigned long period = 1000;
+const unsigned long period = 500;
 
 void MainMenu()
 {
@@ -28,7 +28,7 @@ void MainMenu()
         lcd_1.setBacklight(1);
         lcd_1.begin(16, 2);
         lcd_1.print("hello world");
-        serial.begin(9600);
+        Serial.begin(9600);
     }
 
     void loop()
