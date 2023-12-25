@@ -3,6 +3,74 @@
 #include <Adafruit_LiquidCrystal.h>
 #include <Servo.h>
 
+
+//These 5 arrays paint the bars that go across the screen.  
+byte zero[] = {
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+byte one[] = {
+  B10000,
+  B10000,
+  B10000,
+  B10000,
+  B10000,
+  B10000,
+  B10000,
+  B10000
+};
+
+byte two[] = {
+  B11000,
+  B11000,
+  B11000,
+  B11000,
+  B11000,
+  B11000,
+  B11000,
+  B11000
+};
+
+byte three[] = {
+  B11100,
+  B11100,
+  B11100,
+  B11100,
+  B11100,
+  B11100,
+  B11100,
+  B11100
+};
+
+byte four[] = {
+  B11110,
+  B11110,
+  B11110,
+  B11110,
+  B11110,
+  B11110,
+  B11110,
+  B11110
+};
+
+byte five[] = {
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111
+};
+
+
 int seconds = 0;
 int a = 2048;
 int b = 2048;
@@ -22,7 +90,7 @@ const int heater = 5;
 const int rst = 6;
 Servo servo_3;
 
-Adafruit_LiquidCrystal lcd_1(0);
+Adafruit_LiquidCrystal lcd(0);
 
 // ---------------drain water-------------
 
@@ -41,51 +109,52 @@ void drain_servo(int drain_time)
     }
 }
 
+
 void clock(int selecttime)
 {
-    int seconds = 0;
-    int min = 0;
+    int seconds = 59;  // Start with 59 seconds for a minute-like countdown
+    int min = selecttime - 1;  // Start with selecttime - 1 minutes
 
-    while (min < selecttime)
+    int totalsec = selecttime * 60;
+    int totalsec1 = selecttime * 60;
+
+    while (min >= 0)
     {
-        if (seconds < 59)
+        if (seconds > 0)
         {
-            lcd_1.clear();
-            seconds += 1;
-          	//lcd_1.setCursor(0, 0);
-            //lcd_1.print("Time Elapsed");
-            lcd_1.setCursor(0, 1);
-            lcd_1.print(min);
-            lcd_1.setCursor(2, 1);
-            lcd_1.print(":");
-            lcd_1.setCursor(3, 1);
-            lcd_1.print(seconds);
+            lcd.setCursor(0, 0);
+            lcd.print(min < 10 ? "0" : "");
+            lcd.print(min);
+            lcd.setCursor(2, 0);
+            lcd.print(":");
+            lcd.setCursor(3, 0);
+            lcd.print(seconds < 10 ? "0" : "");
+            lcd.print(seconds);
+            seconds -= 1;
             delay(1000);
         }
-      
-        if (seconds == 59)
-        {
-            lcd_1.clear();
-            seconds = 0;
-            min += 1;
-          	//lcd_1.setCursor(0, 0);
-            //lcd_1.print("Time Elapsed");
-            lcd_1.setCursor(0, 1);
-            lcd_1.print(min);
-            lcd_1.setCursor(2, 1);
-            lcd_1.print(":");
-            lcd_1.setCursor(3, 1);
-            lcd_1.print(seconds);
+
+        if (seconds == 0)
+        { 
+            seconds = 59;
+            lcd.setCursor(0, 0);
+            lcd.print(min < 10 ? "0" : "");
+            lcd.setCursor(3, 0);
+            lcd.print("00");
+            min -= 1;
             delay(1000);
         }
+
+        updateProgressBar(totalsec, totalsec1, 1);
+        totalsec -= 1;
     }
 }
 
 void cooking_done()
 {
-    lcd_1.clear();
-    lcd_1.setCursor(0, 0);
-    lcd_1.print("Cooking Done");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Cooking Done");
   	mode_select = 2048;
     cup_select = 2048;
     a = 2048;
@@ -98,46 +167,75 @@ void cooking_done()
 
 void rice_select(char rice_type[], int cups_value, int time)
 {
-    lcd_1.clear();
-    lcd_1.setCursor(0, 0);
-    lcd_1.print(rice_type);
-    lcd_1.setCursor(0, 1);
-    lcd_1.print("Cups : ");
-    lcd_1.setCursor(7, 1);
-    lcd_1.print(cups_value);
-    
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(rice_type);
+    lcd.setCursor(0, 1);
+    lcd.print("Cups : ");
+    lcd.setCursor(7, 1);
+    lcd.print(cups_value);
     analogWrite(heater, 255); 		 // heater on
+    lcd.clear();
+    fullbar();
     clock(time);                     // Timer for 35 mins
     cooking_done();
 }
 
 void vegetable_select(char veg_type[], int preheattime, int time)
 {
-    lcd_1.clear();
-    lcd_1.setCursor(0, 0);
-    lcd_1.print(veg_type);
-    lcd_1.setCursor(0, 1);
-    lcd_1.print("Preating 5-9 mins");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(veg_type);
+    lcd.setCursor(0, 1);
+    lcd.print("Preating 5-9 mins");
   
     analogWrite(heater, 255); // heater on
+    lcd.clear();
+    fullbar();
     clock(preheattime);              // Timer for 5-9 mins
 	
-    lcd_1.clear();
-  	lcd_1.setCursor(0, 0);
-  
-    lcd_1.print("Cooking");
+    lcd.clear();
+  	lcd.setCursor(0, 0);
+    lcd.print("Cooking");
     analogWrite(heater, 255); // Active cooking
+    lcd.clear();
+    fullbar();
     clock(time);                    // Timer for 12 mins
     
     cooking_done();
 }
 
+void updateProgressBar(unsigned long count, unsigned long totalCount, int lineToPrintOn)
+ {
+    // map(count,0,totalCount,0,100);
+    // map(totalCount,0,totalCount,0,100);
+    double factor = totalCount/80.0;         
+    int percent = (count-1)/factor;
+    int number = percent/5;
+    int remainder = percent%5;
+    if(number > 0)
+    {
+       lcd.setCursor(number-1,lineToPrintOn);
+       lcd.write(5);
+    }
+   
+       lcd.setCursor(number,lineToPrintOn);
+       lcd.write(remainder);   
+ }
+
+
 void setup()
 {
-    lcd_1.begin(16, 2);
-    lcd_1.print("Smart Cooker");
-    delay(3000);
-    lcd_1.clear();
+    lcd.begin(16, 2);
+    lcd.print("Smart Cooker");
+    delay(1000);
+    lcd.createChar(0, zero);
+    lcd.createChar(1, one);
+    lcd.createChar(2, two);
+    lcd.createChar(3, three);
+    lcd.createChar(4, four);
+    lcd.createChar(5, five);
+    lcd.clear();
 
     pinMode(btn, INPUT_PULLUP); //selection button
   	pinMode(rst, INPUT_PULLUP); //reset button 
@@ -156,9 +254,9 @@ char modes[14][20] = {"White Rice", "Black Rice", "Brown Rice", "Red Rice", "Qui
                 	 "Basmati Rice", "Single B Rice", "Double B Rice", "Raw Rice",
                      "Carrot", "Cabbage", "Green Peas", "Spinach", "Potato"};
     
-   lcd_1.clear(); 
-   lcd_1.setCursor(0, 0);
-   lcd_1.print(modes[map(analogRead(pot),0,1024,0,14)]);
+   lcd.clear(); 
+   lcd.setCursor(0, 0);
+   lcd.print(modes[map(analogRead(pot),0,1024,0,14)]);
    
   }
   
@@ -166,8 +264,8 @@ char modes[14][20] = {"White Rice", "Black Rice", "Brown Rice", "Red Rice", "Qui
   {
     char cups[4][9] = {"Cups : 1","Cups : 2","Cups : 3","Cups : 4"};
     
-    lcd_1.setCursor(0, 1);
-    lcd_1.print(cups[map(analogRead(pot),0,1024,0,4)]);
+    lcd.setCursor(0, 1);
+    lcd.print(cups[map(analogRead(pot),0,1024,0,4)]);
     
   }
  // delay(500);
@@ -230,17 +328,17 @@ else{
     // ---------------Cup2----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("White Rice", 2, 1); // time 35 min
+        rice_select("White Rice", 2, 2); // time 35 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("White Rice", 3, 1); // time 38 min
+        rice_select("White Rice", 3, 3); // time 38 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 0 && mode_select <= 73 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("White Rice", 4, 1); // time 42 min
+        rice_select("White Rice", 4, 4); // time 42 min
     }
 
     // ---------------------------------Mode2--------------------------------
@@ -248,24 +346,24 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 74 && mode_select <= 146 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Black Rice", 1, 5500); // time 55 min
+        rice_select("Black Rice", 1, 55); // time 55 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 74 && mode_select <= 146 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Black Rice", 2, 5700); // time 57 min
+        rice_select("Black Rice", 2, 57); // time 57 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 74 && mode_select <= 146 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Black Rice", 3, 6100); // time 61 min
+        rice_select("Black Rice", 3, 61); // time 61 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 74 && mode_select <= 146 && cup_select >= 768 && cup_select <= 1023)
     {
         rice_select("Black Rice", 4, 0); // time 0 min
-        lcd_1.clear();
-        lcd_1.print("Cannot cook");
+        lcd.clear();
+        lcd.print("Cannot cook");
     }
 
     // ---------------------------------Mode3--------------------------------
@@ -273,24 +371,24 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 147 && mode_select <= 219 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Brown Rice", 1, 5500); // time 55 min
+        rice_select("Brown Rice", 1, 55); // time 55 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 147 && mode_select <= 219 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Brown Rice", 2, 5700); // time 57 min
+        rice_select("Brown Rice", 2, 57); // time 57 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 147 && mode_select <= 219 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Brown Rice", 3, 6100); // time 61 min
+        rice_select("Brown Rice", 3, 61); // time 61 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 147 && mode_select <= 219 && cup_select >= 768 && cup_select <= 1023)
     {
         rice_select("Brown Rice", 4, 0); // time 0 min
-        lcd_1.clear();
-        lcd_1.print("Cannot cook");
+        lcd.clear();
+        lcd.print("Cannot cook");
     }
 
     // ---------------------------------Mode4--------------------------------
@@ -298,24 +396,24 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 220 && mode_select <= 292 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Red Rice", 1, 5500); // time 55 min
+        rice_select("Red Rice", 1, 55); // time 55 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 220 && mode_select <= 292 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Red Rice", 2, 5700); // time 57 min
+        rice_select("Red Rice", 2, 57); // time 57 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 220 && mode_select <= 292 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Red Rice", 3, 6300); // time 63 min
+        rice_select("Red Rice", 3, 63); // time 63 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 220 && mode_select <= 292 && cup_select >= 768 && cup_select <= 1023)
     {
         rice_select("Red Rice", 4, 0); // time 0 min
-        lcd_1.clear();
-        lcd_1.print("Cannot cook");
+        lcd.clear();
+        lcd.print("Cannot cook");
     }
 
     // ---------------------------------Rice---------------------------------
@@ -324,22 +422,22 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 293 && mode_select <= 365 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Quinoa Rice", 1, 4200); // time 42 min
+        rice_select("Quinoa Rice", 1, 42); // time 42 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 293 && mode_select <= 365 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Quinoa Rice", 2, 4400); // time 44 min
+        rice_select("Quinoa Rice", 2, 44); // time 44 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 293 && mode_select <= 365 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Quinoa Rice", 3, 4400); // time 44 min
+        rice_select("Quinoa Rice", 3, 44); // time 44 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 293 && mode_select <= 365 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("Quinoa Rice", 4, 4700); // time 47 min
+        rice_select("Quinoa Rice", 4, 47); // time 47 min
     }
 
     // ---------------------------------Mode6--------------------------------
@@ -347,22 +445,22 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 366 && mode_select <= 438 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Basmati Rice", 1, 1500); // time 15 min
+        rice_select("Basmati Rice", 1, 15); // time 15 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 366 && mode_select <= 438 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Basmati Rice", 2, 1800); // time 18 min
+        rice_select("Basmati Rice", 2, 18); // time 18 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 366 && mode_select <= 438 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Basmati Rice", 3, 2200); // time 22 min
+        rice_select("Basmati Rice", 3, 22); // time 22 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 366 && mode_select <= 438 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("Basmati Rice", 4, 2600); // time 26 min
+        rice_select("Basmati Rice", 4, 26); // time 26 min
     }
 
     // ---------------------------------Mode7--------------------------------
@@ -370,22 +468,22 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 439 && mode_select <= 511 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Single B Rice", 1, 3200); // time 32 min
+        rice_select("Single B Rice", 1, 32); // time 32 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 439 && mode_select <= 511 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Single B Rice", 2, 3500); // time 35 min
+        rice_select("Single B Rice", 2, 35); // time 35 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 439 && mode_select <= 511 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Single B Rice", 3, 3800); // time 38 min
+        rice_select("Single B Rice", 3, 38); // time 38 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 439 && mode_select <= 511 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("Single B Rice", 4, 4200); // time 42 min
+        rice_select("Single B Rice", 4, 42); // time 42 min
     }
 
     // ---------------------------------Mode8--------------------------------
@@ -393,22 +491,22 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 512 && mode_select <= 584 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Double B Rice", 1, 3500); // time 35 min
+        rice_select("Double B Rice", 1, 35); // time 35 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 512 && mode_select <= 584 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Double B Rice", 2, 3800); // time 38 min
+        rice_select("Double B Rice", 2, 38); // time 38 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 512 && mode_select <= 584 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Double B Rice", 3, 4200); // time 42 min
+        rice_select("Double B Rice", 3, 42); // time 42 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 512 && mode_select <= 584 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("Double B Rice", 4, 4600); // time 46 min
+        rice_select("Double B Rice", 4, 46); // time 46 min
     }
 
     // ---------------------------------Mode9--------------------------------
@@ -416,22 +514,22 @@ else{
     // ---------------Cup1----------------
     else if (mode_select >= 585 && mode_select <= 657 && cup_select >= 0 && cup_select <= 255)
     {
-        rice_select("Raw Rice", 1, 2000); // time 20 min
+        rice_select("Raw Rice", 1, 20); // time 20 min
     }
     // ---------------Cup2----------------
     else if (mode_select >= 585 && mode_select <= 657 && cup_select >= 256 && cup_select <= 511)
     {
-        rice_select("Raw Rice", 2, 2300); // time 23 min
+        rice_select("Raw Rice", 2, 23); // time 23 min
     }
     // ---------------Cup3----------------
     else if (mode_select >= 585 && mode_select <= 657 && cup_select >= 512 && cup_select <= 767)
     {
-        rice_select("Raw Rice", 3, 2700); // time 27 min
+        rice_select("Raw Rice", 3, 27); // time 27 min
     }
     // ---------------Cup4----------------
     else if (mode_select >= 585 && mode_select <= 657 && cup_select >= 768 && cup_select <= 1023)
     {
-        rice_select("Raw Rice", 4, 3100); // time 31 min
+        rice_select("Raw Rice", 4, 31); // time 31 min
     }
 
     // |||||||||||||||||||||||||||||||||VEGETABLE||||||||||||||||||||||||||||
@@ -442,32 +540,68 @@ else{
 
     else if (mode_select >= 658 && mode_select <= 730)
     {
-        vegetable_select("Carrot", 5500, 1200); // NAME,PRE HEATING TIME ,STEAMING time 12 min
+        vegetable_select("Carrot", 55, 12); // NAME,PRE HEATING TIME ,STEAMING time 12 min
     }
 
     // ---------------------------------Mode11--------------------------------
     else if (mode_select >= 731 && mode_select <= 803)
     {
-        vegetable_select("Cabbage", 5500, 1100); // time 11 min
+        vegetable_select("Cabbage", 55, 11); // time 11 min
     }
 
     // ---------------------------------Mode12--------------------------------
     else if (mode_select >= 804 && mode_select <= 876)
     {
-        vegetable_select("Green Peas", 5500, 800); // time 8 min
+        vegetable_select("Green Peas", 55, 8); // time 8 min
     }
 
     // ---------------------------------Mode13--------------------------------
     else if (mode_select >= 877 && mode_select <= 949)
     {
-        vegetable_select("Spinach", 5500, 300); // time 3 min
+        vegetable_select("Spinach", 55, 3); // time 3 min
     }
 
     // ---------------------------------Mode14--------------------------------
     else if (mode_select >= 950 && mode_select <= 1022)
     {
-        vegetable_select("Potato", 5500, 1200); // time 12 min
+        vegetable_select("Potato", 55, 12); // time 12 min
     }
   //else {cooking_done();}
   }
+}
+
+
+void fullbar(){
+  lcd.setCursor(0,1);
+  lcd.write(5);
+  lcd.setCursor(1,1);
+  lcd.write(5);
+  lcd.setCursor(2,1);
+  lcd.write(5);
+  lcd.setCursor(3,1);
+  lcd.write(5);
+  lcd.setCursor(4,1);
+  lcd.write(5);
+  lcd.setCursor(5,1);
+  lcd.write(5);
+  lcd.setCursor(6,1);
+  lcd.write(5);
+  lcd.setCursor(7,1);
+  lcd.write(5);
+  lcd.setCursor(8,1);
+  lcd.write(5);
+  lcd.setCursor(9,1);
+  lcd.write(5);
+  lcd.setCursor(10,1);
+  lcd.write(5);
+  lcd.setCursor(11,1);
+  lcd.write(5);
+  lcd.setCursor(12,1);
+  lcd.write(5);
+  lcd.setCursor(13,1);
+  lcd.write(5);
+  lcd.setCursor(14,1);
+  lcd.write(5);
+  lcd.setCursor(15,1);
+  lcd.write(5);
 }

@@ -1,4 +1,30 @@
 /*
+// C++ code
+//
+#include <Adafruit_LiquidCrystal.h>
+
+int seconds = 0;
+
+Adafruit_LiquidCrystal lcd(0);
+
+void setup()
+{
+  lcd.begin(16, 2);
+
+  lcd.print("hello world");
+}
+
+void loop()
+{
+  lcd.setCursor(0, 1);
+  lcd.print(seconds);
+  lcd.setBacklight(1);
+  delay(500); // Wait for 500 millisecond(s)
+  delay(500); // Wait for 500 millisecond(s)
+  seconds += 1;
+}
+
+
  * Simple progress bar to show the progress of time or other suitable count.
  * 
  */
@@ -7,13 +33,15 @@
 
 //Including these 2 libraries as these work with my LCD, which is an I2C LCD.
 //If your LCD is different, change the code accordingly.
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
+//#include <Wire.h> 
+//#include <LiquidCrystal_I2C.h>
+#include <Adafruit_LiquidCrystal.h>
+
 
 // Set the LCD address to 0x27 (or 0x3F) for a 16 chars and 2 line display
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+//LiquidCrystal_I2C lcd(0x27, 16, 2);
 //LiquidCrystal_I2C lcd(0x27, 20, 4);       //If using a 20 x 4 display, uncomment this line and comment out the line above
-
+Adafruit_LiquidCrystal lcd(0);
 
 //These 5 arrays paint the bars that go across the screen.  
 byte zero[] = {
@@ -85,28 +113,19 @@ void setup() {
 
 
   // initialize the LCD and allocate the 5 arrays to a number.
-  lcd.begin();
+  lcd.begin(16, 2);
   lcd.createChar(0, zero);
   lcd.createChar(1, one);
   lcd.createChar(2, two);
   lcd.createChar(3, three);
   lcd.createChar(4, four);
   lcd.createChar(5, five);
-
+  fullbar();
 }
 
 //This simple loop code prints a number from 0 to 100 on the top line and displays the progress bar on the bottom line.
 // The loop counts up, pauses for 1 second, then counts down again.
 void loop() {
-  for(int i=0; i <= 100; i++)
-  {
-    lcd.setCursor(0,0);
-    lcd.print(i);
-    lcd.print("   ");
-    updateProgressBar(i, 100, 1);   //This line calls the subroutine that displays the progress bar.  The 3 arguments are the current count, the total count and the line you want to print on.
-    delay(200);
-  }
-  delay(1000);
   for(int i=100; i >= 0; i--)
   {
     lcd.setCursor(0,0);
@@ -138,7 +157,7 @@ void loop() {
  * Based on the number and remainder values, the appropriate character is drawn on the screen to show progress.
  * This only works for a steady count up or down.  This will not work as is for fluctuating values, such as from an analogue input.
  */
- void updateProgressBar(unsigned long count, unsigned long totalCount, int lineToPrintOn)
+void updateProgressBar(unsigned long count, unsigned long totalCount, int lineToPrintOn)
  {
     double factor = totalCount/80.0;          //See note above!
     int percent = (count+1)/factor;
@@ -153,3 +172,39 @@ void loop() {
        lcd.setCursor(number,lineToPrintOn);
        lcd.write(remainder);   
  }
+
+
+void fullbar(){
+  lcd.setCursor(0,1);
+  lcd.write(5);
+  lcd.setCursor(1,1);
+  lcd.write(5);
+  lcd.setCursor(2,1);
+  lcd.write(5);
+  lcd.setCursor(3,1);
+  lcd.write(5);
+  lcd.setCursor(4,1);
+  lcd.write(5);
+  lcd.setCursor(5,1);
+  lcd.write(5);
+  lcd.setCursor(6,1);
+  lcd.write(5);
+  lcd.setCursor(7,1);
+  lcd.write(5);
+  lcd.setCursor(8,1);
+  lcd.write(5);
+  lcd.setCursor(9,1);
+  lcd.write(5);
+  lcd.setCursor(10,1);
+  lcd.write(5);
+  lcd.setCursor(11,1);
+  lcd.write(5);
+  lcd.setCursor(12,1);
+  lcd.write(5);
+  lcd.setCursor(13,1);
+  lcd.write(5);
+  lcd.setCursor(14,1);
+  lcd.write(5);
+  lcd.setCursor(15,1);
+  lcd.write(5);
+}
