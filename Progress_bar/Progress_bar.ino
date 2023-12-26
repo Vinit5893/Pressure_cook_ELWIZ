@@ -126,6 +126,15 @@ void setup() {
 //This simple loop code prints a number from 0 to 100 on the top line and displays the progress bar on the bottom line.
 // The loop counts up, pauses for 1 second, then counts down again.
 void loop() {
+  for(int i=0; i <= 100; i++)
+  {
+    lcd.setCursor(0,0);
+    lcd.print(i);
+    lcd.print("   ");
+    updateProgressBar(i, 100, 1);   //This line calls the subroutine that displays the progress bar.  The 3 arguments are the current count, the total count and the line you want to print on.
+    delay(200);
+  }
+
   for(int i=100; i >= 0; i--)
   {
     lcd.setCursor(0,0);
