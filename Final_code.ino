@@ -3,84 +3,14 @@
 #include <Adafruit_LiquidCrystal.h>
 #include <Servo.h>
 
-
 //These 5 arrays paint the bars that go across the screen.  
-byte zero[] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000
-};
-byte one[] = {
-  B10000,
-  B10000,
-  B10000,
-  B10000,
-  B10000,
-  B10000,
-  B10000,
-  B10000
-};
-
-byte two[] = {
-  B11000,
-  B11000,
-  B11000,
-  B11000,
-  B11000,
-  B11000,
-  B11000,
-  B11000
-};
-
-byte three[] = {
-  B11100,
-  B11100,
-  B11100,
-  B11100,
-  B11100,
-  B11100,
-  B11100,
-  B11100
-};
-
-byte four[] = {
-  B11110,
-  B11110,
-  B11110,
-  B11110,
-  B11110,
-  B11110,
-  B11110,
-  B11110
-};
-
-byte five[] = {
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111
-};
-
-byte six[] = {
-  B11110,
-  B10010,
-  B10010,
-  B11110,
-  B00000,
-  B00000,
-  B00000,
-  B00000
-};
-
+byte zero[] = {B00000,B00000,B00000,B00000,B00000,B00000,B00000,B00000};
+byte one[] = {B10000,B10000,B10000,B10000,B10000,B10000,B10000,B10000};
+byte two[] = {B11000,B11000,B11000,B11000,B11000,B11000,B11000,B11000};
+byte three[] = {B11100,B11100,B11100,B11100,B11100,B11100,B11100,B11100};
+byte four[] = {B11110,B11110,B11110,B11110,B11110,B11110,B11110,B11110};
+byte five[] = {B11111,B11111,B11111,B11111,B11111,B11111,B11111,B11111};
+byte degree[] = {B11110,B10010,B10010,B11110,B00000,B00000,B00000,B00000};
 
 int seconds = 0;
 int a = 2048;
@@ -92,10 +22,14 @@ char rice_type[] = " ";
 char Veg_type[] = " ";
 int cups_value = 0;
 int cook_done = 0;
+int heat_avg = 0;
 
 bool isStoring = 0;
 
 const int pot = A0;
+const int temp_in = A1;
+const int temp_out = A2;
+const int buzzer = 4;
 const int btn = 2;
 const int heater = 5;
 const int rst = 6;
@@ -120,6 +54,31 @@ void drain_servo(int drain_time)
     }
 }
 
+int gettemperature(){
+        // int temp1 = analogRead(temp_out);    // Reading data from the sensor.This voltage is stored as a 10bit number.
+        // int voltage1 = (tmp1 * 5.0)/1024;    //(5*temp)/1024 is to convert the 10 bit number to a voltage reading.
+        // int milliVolt1 = voltage1 * 1000;    //This is multiplied by 1000 to convert it to millivolt.
+        // int temp1 =  int((milliVolt1-500)/10) ;    //This is then subtracted by 500 to get the actual temperature in millivolt and divided by 10 to get the temperature in degree celsius.
+
+        // int tmp2 = analogRead(temp_out);
+        // int voltage2 = (tmp2 * 5.0)/1024;
+        // int milliVolt2 = voltage2 * 1000;
+        // int temp2 =  int((milliVolt2-500)/10) ;
+    
+        int temp1 =  int(((analogRead(temp_out)) * 0.48828125)-50) ;
+        int temp2 =  int(((analogRead(temp_in)) * 0.48828125)-50) ;
+        heat_avg = int((temp1 + temp2) / 2.0);
+        lcd.setCursor(6, 0);
+        lcd.print("Temp:");
+        lcd.setCursor(11, 0);
+        lcd.print(heat_avg < 100 ? " " : ""); // Print a space if heat_avg is less than 100
+        lcd.print(heat_avg < 10 ? " " : "");  // Print a space if heat_avg is less than 10
+        lcd.print(heat_avg);
+        lcd.setCursor(14, 0);
+        lcd.write(6);
+        lcd.print("C");
+        return heat_avg;
+}
 
 void clock(int selecttime)
 {
@@ -155,9 +114,19 @@ void clock(int selecttime)
             min -= 1;
             delay(1000);
         }
-
+        gettemperature();
         updateProgressBar(i, totalsec1, 1);
         i += 1;
+    }
+}
+
+void dummyclock(){
+    while (1){
+        gettemperature();
+        if (heat_avg >= 90) {
+            break;  // Exit the loop if heat_avg is greater than 90
+        }
+        delay(1000);
     }
 }
 
@@ -171,8 +140,8 @@ void cooking_done()
     a = 2048;
     b = 2048;
     analogWrite(heater, 11); // heater turned on at 45 degree celcius until push btn is pressed
-    drain_servo(10000);
-    digitalWrite(4, HIGH); // Buzzer and Led Indication
+    drain_servo(5000);
+    digitalWrite(buzzer, HIGH); // Buzzer and Led Indication
     delay(5000);
 }
 
@@ -193,16 +162,16 @@ void rice_select(char rice_type[], int cups_value, int time)
 
 void vegetable_select(char veg_type[], int preheattime, int time)
 {
+
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(veg_type);
     lcd.setCursor(0, 1);
     lcd.print("Preating 5-9 mins");
-  
     analogWrite(heater, 255); // heater on
     lcd.clear();
+    dummyclock();                    // proceed to next step when temp reaches 90 degree celcius
     clock(preheattime);              // Timer for 5-9 mins
-	
     lcd.clear();
   	lcd.setCursor(0, 0);
     lcd.print("Cooking");
@@ -217,7 +186,7 @@ void updateProgressBar(unsigned long count, unsigned long totalCount, int lineTo
  {
     // map(count,0,totalCount,0,100);
     // map(totalCount,0,totalCount,0,100);
-    double factor = totalCount/80.0;         
+    float factor = totalCount/80.0;         
     int percent = (count+1)/factor;
     int number = percent/5;
     int remainder = percent%5;
@@ -243,11 +212,14 @@ void setup()
     lcd.createChar(3, three);
     lcd.createChar(4, four);
     lcd.createChar(5, five);
-    lcd.createChar(6, six);
+    lcd.createChar(6, degree);
     lcd.clear();
 
     pinMode(btn, INPUT_PULLUP); //selection button
   	pinMode(rst, INPUT_PULLUP); //reset button 
+    pinMode(heater, OUTPUT);    //heater
+    pinMode(buzzer, OUTPUT);         //buzzer
+
     
     servo_3.attach(3, 500, 2500);
   	servo_3.write(0);
@@ -292,6 +264,7 @@ if(rst_btn == 1)
       cup_select = 2048;
       a = 2048;
       b = 2048;
+  	  digitalWrite(buzzer, LOW);
     }
 
   
@@ -549,31 +522,31 @@ else{
 
     else if (mode_select >= 658 && mode_select <= 730)
     {
-        vegetable_select("Carrot", 55, 12); // NAME,PRE HEATING TIME ,STEAMING time 12 min
+        vegetable_select("Carrot", 6, 12); // NAME,PRE HEATING TIME ,STEAMING time 12 min
     }
 
     // ---------------------------------Mode11--------------------------------
     else if (mode_select >= 731 && mode_select <= 803)
     {
-        vegetable_select("Cabbage", 55, 11); // time 11 min
+        vegetable_select("Cabbage", 6, 11); // time 11 min
     }
 
     // ---------------------------------Mode12--------------------------------
     else if (mode_select >= 804 && mode_select <= 876)
     {
-        vegetable_select("Green Peas", 55, 8); // time 8 min
+        vegetable_select("Green Peas", 6, 8); // time 8 min
     }
 
     // ---------------------------------Mode13--------------------------------
     else if (mode_select >= 877 && mode_select <= 949)
     {
-        vegetable_select("Spinach", 55, 3); // time 3 min
+        vegetable_select("Spinach", 6, 3); // time 3 min
     }
 
     // ---------------------------------Mode14--------------------------------
     else if (mode_select >= 950 && mode_select <= 1022)
     {
-        vegetable_select("Potato", 55, 12); // time 12 min
+        vegetable_select("Potato", 6, 12); // time 12 min
     }
   //else {cooking_done();}
   }
