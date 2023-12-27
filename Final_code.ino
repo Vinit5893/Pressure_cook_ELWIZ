@@ -66,7 +66,7 @@ int gettemperature()
     // int milliVolt2 = voltage2 * 1000;
     // int temp2 =  int((milliVolt2-500)/10) ;
 
-    int temp1 = int(((analogRead(temp_out)) * 0.48828125) - 50);
+    int temp1 = int(((analogRead(temp_out)) * 0.48828125) - 50);  // 0.48828125 = ((5/1024) * 1000)/10
     int temp2 = int(((analogRead(temp_in)) * 0.48828125) - 50);
     heat_avg = int((temp1 + temp2) / 2.0);
     lcd.setCursor(6, 0);
