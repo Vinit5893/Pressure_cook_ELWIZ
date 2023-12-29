@@ -66,7 +66,7 @@ int gettemperature()
     // int milliVolt2 = voltage2 * 1000;
     // int temp2 =  int((milliVolt2-500)/10) ;
 
-    int temp1 = int(((analogRead(temp_out)) * 0.48828125) - 50);  // 0.48828125 = ((5/1024) * 1000)/10
+    int temp1 = int(((analogRead(temp_out)) * 0.48828125) - 50);
     int temp2 = int(((analogRead(temp_in)) * 0.48828125) - 50);
     heat_avg = int((temp1 + temp2) / 2.0);
     lcd.setCursor(6, 0);
@@ -125,10 +125,10 @@ void dummyclock()
     while (1)
     {
         gettemperature();
-        if (heat_avg >= 90)
-        {
-            break; // Exit the loop if heat_avg is greater than 90
-        }
+          if (heat_avg >= 90)
+          {
+              break; // Exit the loop if heat_avg is greater than 90
+          }
         delay(1000);
     }
 }
@@ -138,14 +138,25 @@ void cooking_done()
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Cooking Done");
+  	lcd.setCursor(0, 1);
+  	lcd.print("Press rst to OFF");
     mode_select = 2048;
     cup_select = 2048;
     a = 2048;
     b = 2048;
-    analogWrite(heater, 11); // heater turned on at 45 degree celcius until push btn is pressed
+    
+  
+  	analogWrite(heater, 11); // heater turned on at 45 degree celcius until push rst is pressed
     drain_servo(5000);
+  
+  
     digitalWrite(buzzer, HIGH); // Buzzer and Led Indication
-    delay(5000);
+    delay(2000);	
+  	digitalWrite(buzzer, LOW);
+  
+    while (digitalRead(rst) == 0)
+    {}   // stay here untill the rst btn is pressed.
+ 
 }
 
 void rice_select(char rice_type[], int cups_value, int time)
@@ -174,7 +185,26 @@ void vegetable_select(char veg_type[], int preheattime, int time)
     analogWrite(heater, 255); // heater on
     lcd.clear();
     dummyclock();       // proceed to next step when temp reaches 90 degree celcius
+   
+  
     clock(preheattime); // Timer for 5-9 mins
+  
+    digitalWrite(buzzer, HIGH); //preheating done buzzer
+    delay(5000);
+    digitalWrite(buzzer, LOW);
+  
+   //---------------------------------
+  
+   //loading time
+     while(digitalRead(btn) == 0)
+     {
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("LOAD & PRESS");
+     }
+  
+   //---------------------------------
+
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Cooking");
@@ -202,6 +232,8 @@ void updateProgressBar(unsigned long count, unsigned long totalCount, int lineTo
     lcd.write(remainder);
 }
 
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 void setup()
 {
     lcd.begin(16, 2);
@@ -226,6 +258,8 @@ void setup()
 
     Serial.begin(9600);
 }
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 void loop()
 {
@@ -252,6 +286,7 @@ void loop()
     //-------------------------------------------------------------------------------------
 
     int rst_btn = digitalRead(rst);
+  
     if (rst_btn == 1)
     {
         analogWrite(heater, 0);
@@ -517,7 +552,7 @@ void loop()
 
         else if (mode_select >= 658 && mode_select <= 730)
         {
-            vegetable_select("Carrot", 6, 12); // (Name, Pre Heating Time (5-9 mins), Steaming Time) 12 min
+            vegetable_select("Carrot", 1, 1); // (Name, Pre Heating Time (5-9 mins), Steaming Time) 12 min
         }
 
         // ---------------------------------Mode11--------------------------------
